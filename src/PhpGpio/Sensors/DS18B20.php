@@ -48,9 +48,13 @@ class DS18B20 implements SensorInterface
      * @param array $args
      * @return $this
      */
-    public function __construct()
+    public function __construct($bus=null)
     {
-        $this->bus = $this->guessBus();
+        if($bus===null) {
+            $this->bus = $this->guessBus();
+        } else {
+            $this->bus = $bus;
+        }
 
         return $this;
     }
@@ -73,7 +77,25 @@ class DS18B20 implements SensorInterface
 
         return $busPath . '/w1_slave';
     }
-
+    
+    
+    /**
+     * 
+     * @return false|array:\PhpGpio\Sensors\DS18B20
+     */
+    public function guessAll() {
+        $busFolders = glob(self::BASEPATH . '*'); // predictable path on a Raspberry Pi
+        if (0 === count($busFolders)) {
+            return false;
+        }
+        $result = array();
+        foreach($busFolders as $busPath) {
+            $result[]= new DS18B20($busPath.'/w1_slave');
+        }
+        
+        return $result;     
+    }
+    
     /**
      * Read
      *
