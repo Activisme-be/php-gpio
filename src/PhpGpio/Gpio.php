@@ -2,14 +2,15 @@
 
 namespace PhpGpio;
 
-use PhpGpio\Pi;
-
-class Gpio
+class Gpio implements GpioInterface
 {
     // Using BCM pin numbers.
     private $pins;
     private $hackablePins;
 
+    /**
+     * @link http://www.raspberrypi-spy.co.uk/2012/06/simple-guide-to-the-rpi-gpio-header-and-pins/
+     */
     public function __construct()
     {
         $raspi = new Pi;
@@ -20,17 +21,35 @@ class Gpio
                 21, 22, 23, 24, 25
             );
             $this->hackablePins = array(
-                4, 17, 18, 21, 22, 23,24, 25
+                4, 7, 8, 9,
+                10, 11, 17, 18,
+                21, 22, 23, 24, 25
             );
-        } else {
-            #new gpio layout: different pins
+        } else if($raspi->getVersion() < 16) {
+            # new GPIO layout (REV2)
             $this->pins = array(
                 2, 3, 4, 7, 8, 9,
                 10, 11, 14, 15, 17, 18,
                 22, 23, 24, 25, 27
             );
             $this->hackablePins = array(
-                4, 17, 18, 22, 23, 24, 25, 27
+                4, 7, 8, 9,
+                10, 11, 17, 18,
+                22, 23, 24, 25, 27
+            );
+        } else {
+            # new GPIO layout (B+)
+            $this->pins = array(
+                2, 3, 4, 5, 6, 7,
+                8, 9, 10, 11, 12, 13,
+                14, 15, 16, 17, 18, 19,
+                20, 21, 22, 23, 24, 25,
+                26, 27
+            );
+            $this->hackablePins = array(
+                4, 5, 6,
+                12, 13, 16, 17, 18, 19,
+                20, 21, 22, 23, 24, 25, 26, 27
             );
         }
     }
@@ -38,7 +57,7 @@ class Gpio
     /**
      * getHackablePins : the pins you can hack with.
      * @link http://elinux.org/RPi_Low-level_peripherals
-     * @return array
+     * @return integer[]
      */
     public function getHackablePins()
     {
@@ -46,11 +65,13 @@ class Gpio
     }
 
     private $directions = array(
-        'in', 'out'
+        GpioInterface::DIRECTION_IN,
+        GpioInterface::DIRECTION_OUT,
     );
 
     private $outputs = array(
-        0, 1
+        GpioInterface::IO_VALUE_ON,
+        GpioInterface::IO_VALUE_OFF,
     );
 
     // exported pins for when we unexport all
@@ -75,11 +96,11 @@ class Gpio
         }
 
         // Export pin
-        file_put_contents('/sys/class/gpio/export', $pinNo);
+        file_put_contents(GpioInterface::PATH_EXPORT, $pinNo);
 
         // if valid direction then set direction
         if ($this->isValidDirection($direction)) {
-            file_put_contents('/sys/class/gpio/gpio'.$pinNo.'/direction', $direction);
+            file_put_contents(GpioInterface::PATH_GPIO.$pinNo.'/direction', $direction);
         }
 
         // Add to exported pins array
@@ -92,7 +113,7 @@ class Gpio
      * Get input value
      *
      * @param  int   $pinNo
-     * @return mixed string GPIO value or boolean false
+     * @return false|string string GPIO value or boolean false
      */
     public function input($pinNo)
     {
@@ -101,7 +122,7 @@ class Gpio
         }
         if ($this->isExported($pinNo)) {
             if ($this->currentDirection($pinNo) != "out") {
-                return file_get_contents('/sys/class/gpio/gpio'.$pinNo.'/value');
+                return trim(file_get_contents(GpioInterface::PATH_GPIO.$pinNo.'/value'));
             }
             throw new \Exception('Error!' . $this->currentDirection($pinNo) . ' is a wrong direction for this pin!');
         }
@@ -126,7 +147,7 @@ class Gpio
         }
         if ($this->isExported($pinNo)) {
             if ($this->currentDirection($pinNo) != "in") {
-                file_put_contents('/sys/class/gpio/gpio'.$pinNo.'/value', $value);
+                file_put_contents(GpioInterface::PATH_GPIO.$pinNo.'/value', $value);
             } else {
                 throw new \Exception('Error! Wrong Direction for this pin! Meant to be out while it is ' . $this->currentDirection($pinNo));
             }
@@ -147,7 +168,7 @@ class Gpio
             return false;
         }
         if ($this->isExported($pinNo)) {
-            file_put_contents('/sys/class/gpio/unexport', $pinNo);
+            file_put_contents(GpioInterface::PATH_UNEXPORT, $pinNo);
             foreach ($this->exportedPins as $key => $value) {
                 if($value == $pinNo) unset($key);
             }
@@ -159,12 +180,12 @@ class Gpio
     /**
      * Unexport all pins
      *
-     * @return mixed Gpio current instance or boolean false
+     * @return Gpio Gpio current instance or boolean false
      */
     public function unexportAll()
     {
         foreach ($this->exportedPins as $pinNo) {
-            file_put_contents('/sys/class/gpio/unexport', $pinNo);
+            file_put_contents(GpioInterface::PATH_UNEXPORT, $pinNo);
         }
         $this->exportedPins = array();
 
@@ -182,13 +203,13 @@ class Gpio
             return false;
         }
 
-        return file_exists('/sys/class/gpio/gpio'.$pinNo);
+        return file_exists(GpioInterface::PATH_GPIO.$pinNo);
     }
 
     /**
      * get the pin's current direction
      *
-     * @return mixed string pin's direction value or boolean false
+     * @return false|string string pin's direction value or boolean false
      */
     public function currentDirection($pinNo)
     {
@@ -196,7 +217,7 @@ class Gpio
             return false;
         }
 
-        return file_get_contents('/sys/class/gpio/gpio'.$pinNo.'/direction');
+        return trim(file_get_contents(GpioInterface::PATH_GPIO.$pinNo.'/direction'));
     }
 
     /**
