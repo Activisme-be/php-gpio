@@ -15,7 +15,8 @@ class Pi
      */
     public function getVersion()
     {
-        $cpuinfo = preg_split ("/\n/", file_get_contents('/proc/cpuinfo'));
+        $cpuinfo = preg_split("/\n/", file_get_contents('/proc/cpuinfo'));
+
         foreach ($cpuinfo as $line) {
             if (preg_match('/Revision\s*:\s*([^\s]*)\s*/', $line, $matches)) {
                 return hexdec($matches[1]);
@@ -34,7 +35,7 @@ class Pi
     {
         $cputemp = floatval(file_get_contents('/sys/class/thermal/thermal_zone0/temp'))/1000;
 		
-		if($fahrenheit)
+		if ($fahrenheit)
 			$cputemp = 1.8* $cputemp+32;
 		
         return $cputemp;
@@ -52,8 +53,6 @@ class Pi
 	
     public function getCpuFrequency()
     {
-        $frequency = floatval(file_get_contents('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'))/1000;
-		
-        return $frequency;
+        return floatval(file_get_contents('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq'))/1000;
     }
 }

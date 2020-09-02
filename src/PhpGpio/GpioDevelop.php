@@ -10,30 +10,17 @@ namespace PhpGpio;
  */
 class GpioDevelop implements GpioInterface
 {
-    /**
-     * @var array
-     */
-    public $pins = array(14, 15, 17, 18);
+    public array $pins = [14, 15, 17, 18];
+    public array $hackablePins = [17, 18];
 
-    /**
-     * @var array
-     */
-    public $hackablePins = array(17, 18);
+    public int $inputValue = GpioInterface::IO_VALUE_OFF;
 
-    /**
-     * @var int
-     */
-    public $inputValue = GpioInterface::IO_VALUE_OFF;
-
-    /**
-     * @var string
-     */
-    public $direction = GpioInterface::DIRECTION_OUT;
+    public string $direction = GpioInterface::DIRECTION_OUT;
 
     /**
      * getHackablePins : the pins you can hack with.
-     * @link http://elinux.org/RPi_Low-level_peripherals
      *
+     * @see http://elinux.org/RPi_Low-level_peripherals
      * @return array
      */
     public function getHackablePins()
@@ -57,8 +44,7 @@ class GpioDevelop implements GpioInterface
     /**
      * Get input value
      *
-     * @param  int   $pinNo
-     *
+     * @param  int $pinNo
      * @return int GPIO value or boolean false
      */
     public function input($pinNo)
@@ -71,10 +57,9 @@ class GpioDevelop implements GpioInterface
      *
      * @param  int    $pinNo
      * @param  string $value
-     *
      * @return GpioDevelop or boolean false
      */
-    public function output($pinNo, $value)
+    public function output(int $pinNo, string $value)
     {
         return $this;
     }
@@ -83,7 +68,6 @@ class GpioDevelop implements GpioInterface
      * Unexport Pin
      *
      * @param  int $pinNo
-     *
      * @return GpioDevelop or boolean false
      */
     public function unexport($pinNo)
@@ -104,11 +88,10 @@ class GpioDevelop implements GpioInterface
     /**
      * Check if pin is exported
      *
-     * @param int $pinNo
-     *
-     * @return boolean
+     * @param  int $pinNo
+     * @return bool
      */
-    public function isExported($pinNo)
+    public function isExported($pinNo): bool
     {
         return in_array($pinNo, $this->pins) || in_array($pinNo, $this->hackablePins);
     }
@@ -116,11 +99,10 @@ class GpioDevelop implements GpioInterface
     /**
      * get the pin's current direction
      *
-     * @param int $pinNo
-     *
+     * @param  int $pinNo
      * @return string pin's direction value or boolean false
      */
-    public function currentDirection($pinNo)
+    public function currentDirection($pinNo): string
     {
         return $this->direction;
     }
@@ -128,11 +110,10 @@ class GpioDevelop implements GpioInterface
     /**
      * Check for valid direction, in or out
      *
-     * @param string $direction
-     *
-     * @return boolean
+     * @param  string $direction
+     * @return bool
      */
-    public function isValidDirection($direction)
+    public function isValidDirection($direction): bool
     {
         return $direction == GpioInterface::DIRECTION_IN || $direction == GpioInterface::DIRECTION_OUT;
     }
@@ -140,11 +121,10 @@ class GpioDevelop implements GpioInterface
     /**
      * Check for valid output value
      *
-     * @param mixed $output
-     *
-     * @return boolean
+     * @param  mixed $output
+     * @return bool
      */
-    public function isValidOutput($output)
+    public function isValidOutput($output): bool
     {
         return $output == GpioInterface::IO_VALUE_ON || $output == GpioInterface::IO_VALUE_OFF;
     }
@@ -152,11 +132,10 @@ class GpioDevelop implements GpioInterface
     /**
      * Check for valid pin value
      *
-     * @param int $pinNo
-     *
-     * @return boolean
+     * @param  int $pinNo
+     * @return bool
      */
-    public function isValidPin($pinNo)
+    public function isValidPin($pinNo): bool
     {
         return in_array($pinNo, $this->pins) || in_array($pinNo, $this->hackablePins);
     }

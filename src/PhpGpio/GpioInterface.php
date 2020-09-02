@@ -9,15 +9,15 @@ namespace PhpGpio;
  */
 interface GpioInterface
 {
-    const DIRECTION_IN = 'in';
-    const DIRECTION_OUT = 'out';
+    public const DIRECTION_IN = 'in';
+    public const DIRECTION_OUT = 'out';
 
-    const IO_VALUE_ON = 1;
-    const IO_VALUE_OFF = 0;
+    public const IO_VALUE_ON = 1;
+    public const IO_VALUE_OFF = 0;
 
-    const PATH_GPIO = '/sys/class/gpio/gpio';
-    const PATH_EXPORT = '/sys/class/gpio/export';
-    const PATH_UNEXPORT = '/sys/class/gpio/unexport';
+    public const PATH_GPIO = '/sys/class/gpio/gpio';
+    public const PATH_EXPORT = '/sys/class/gpio/export';
+    public const PATH_UNEXPORT = '/sys/class/gpio/unexport';
 
     /**
      * getHackablePins : the pins you can hack with.
@@ -32,88 +32,83 @@ interface GpioInterface
      *
      * @param  int    $pinNo
      * @param  string $direction
-     *
      * @return GpioDevelop string GPIO value or boolean false
      */
-    public function setup($pinNo, $direction);
+    public function setup(int $pinNo, string $direction);
 
     /**
      * Get input value
      *
      * @param  int   $pinNo
-     *
-     * @return integer string GPIO value or boolean false
+     * @return int string GPIO value or boolean false
      */
-    public function input($pinNo);
+    public function input(int $pinNo);
 
     /**
      * Set output value
      *
      * @param  int    $pinNo
      * @param  string $value
-     *
      * @return GpioDevelop Gpio current instance or boolean false
      */
-    public function output($pinNo, $value);
+    public function output(int $pinNo, string $value);
 
     /**
      * Unexport Pin
      *
      * @param  int $pinNo
-     *
      * @return GpioDevelop Gpio current instance or boolean false
      */
-    public function unexport($pinNo);
+    public function unexport(int $pinNo);
 
     /**
      * Unexport all pins
      *
-     * @return GpioDevelop Gpio current instance or boolean false
+     * Returns GPIO current instance or an false (boolean)
+     *
+     * @return GpioDevelop
      */
     public function unexportAll();
 
     /**
      * Check if pin is exported
      *
-     * @param int $pinNo
-     *
-     * @return boolean
+     * @param  int $pinNo
+     * @return bool
      */
-    public function isExported($pinNo);
+    public function isExported(int $pinNo): bool;
 
     /**
-     * get the pin's current direction
+     * Get the pin's current direction
      *
-     * @param int $pinNo
+     * Returns pin's direction value or boolean false
      *
-     * @return string string pin's direction value or boolean false
+     * @param  int $pinNo
+     * @return string
      */
-    public function currentDirection($pinNo);
+    public function currentDirection(int $pinNo);
 
     /**
      * Check for valid direction, in or out
      *
-     * @param string $direction
-     *
-     * @return boolean
+     * @param  string $direction
+     * @return bool
      */
-    public function isValidDirection($direction);
+    public function isValidDirection(string $direction);
 
     /**
      * Check for valid output value
      *
-     * @param mixed $output
-     *
-     * @return boolean
+     * @param  mixed $output
+     * @return bool
      */
-    public function isValidOutput($output);
+    public function isValidOutput($output): bool;
 
     /**
      * Check for valid pin value
      *
-     * @param int $pinNo
-     *
-     * @return boolean
+     * @param  int $pinNo
+     * @return bool
      */
-    public function isValidPin($pinNo);
+    public function isValidPin(int $pinNo): bool;
 }

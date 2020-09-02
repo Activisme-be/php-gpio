@@ -2,22 +2,30 @@
 
 namespace PhpGpio\Sensors;
 
-/*
+use Exception;
+use InvalidArgumentException;
+
+/**
+ * Class DS18B20
+ *
  * 1-Wire is a device communications bus system designed by Dallas Semiconductor Corp.
  * that provides low-speed data, signaling, and power over a single signal.
  * 1-Wire is similar in concept to I²C, but with lower data rates and longer range.
  * It is typically used to communicate with small inexpensive devices
  * such as digital thermometers and weather instruments.
+ *
  * (source : http://en.wikipedia.org/wiki/1-Wire)
+ *
+ * @package PhpGpio\Sensors
  */
 class DS18B20 implements SensorInterface
 {
+    public const BASEPATH = '/sys/bus/w1/devices/28-';
 
     private $bus = null; // ex: '/sys/bus/w1/devices/28-000003ced8f4/w1_slave'
-    const BASEPATH = '/sys/bus/w1/devices/28-';
 
     /**
-     *  Get-Accesssor
+     *  Get-Accessor
      */
     public function getBus()
     {
@@ -25,18 +33,21 @@ class DS18B20 implements SensorInterface
     }
 
     /**
-     *  Set-Accesssor
+     * Set-Accessor
+     *
+     * @param  mixed $value
+     * @return void
      */
-    public function setBus($value)
+    public function setBus($value): void
     {
         // ? is a non empty string, & a valid file path
         if (empty($value) || !is_string($value) || !file_exists($value)) {
-            throw new \InvalidArgumentException("$value is not a valid w1 bus path");
+            throw new InvalidArgumentException("$value is not a valid w1 bus path");
         }
 
-        // ? is a regular w1-bus path on a Raspbery ?
+        // ? is a regular w1-bus path on a Raspberry ?
         if (!strstr($value, self::BASEPATH)) {
-            throw new \InvalidArgumentException("$value does not seem to be a regular w1 bus path");
+            throw new InvalidArgumentException("$value does not seem to be a regular w1 bus path");
         }
 
         $this->bus = $value;
@@ -45,11 +56,12 @@ class DS18B20 implements SensorInterface
     /**
      * Setup
      *
-     * @return $this
+     * @param null $bus
+     * @return self
      */
-    public function __construct($bus=null)
+    public function __construct($bus = null)
     {
-        if($bus===null) {
+        if ($bus === null) {
             $this->bus = $this->guessBus();
         } else {
             $this->bus = $bus;
@@ -69,9 +81,11 @@ class DS18B20 implements SensorInterface
     public function guessBus()
     {
         $busFolders = glob(self::BASEPATH . '*'); // predictable path on a Raspberry Pi
+
         if (0 === count($busFolders)) {
             return false;
         }
+
         $busPath = $busFolders[0]; // get the first thermal sensor found
 
         return $busPath . '/w1_slave';
@@ -82,33 +96,40 @@ class DS18B20 implements SensorInterface
      * 
      * @return false|array:\PhpGpio\Sensors\DS18B20
      */
-    public function guessAll() {
+    public function guessAll()
+    {
         $busFolders = glob(self::BASEPATH . '*'); // predictable path on a Raspberry Pi
+
         if (0 === count($busFolders)) {
             return false;
         }
-        $result = array();
+
+        $result = [];
+
         foreach($busFolders as $busPath) {
             $result[]= new DS18B20($busPath.'/w1_slave');
         }
         
         return $result;     
     }
-    
+
     /**
      * Read
      *
      * @param  array $args
      * @return float $value
+     *
+     * @throws Exception
      */
-    public function read($args = array())
+    public function read(array $args = []): float
     {
         if (!is_string($this->bus) || !file_exists($this->bus)) {
-            throw new \Exception("No bus file found: please run sudo modprobe w1-gpio; sudo modprobe w1-therm & check the guessBus() method result");
+            throw new Exception("No bus file found: please run sudo modprobe w1-gpio; sudo modprobe w1-therm & check the guessBus() method result");
         }
+
         $raw = file_get_contents($this->bus);
         $raw = str_replace("\n", "", $raw);
-        $boom = explode('t=',$raw);
+        $boom = explode('t=', $raw);
 
         return floatval($boom[1]/1000);
     }
@@ -117,9 +138,9 @@ class DS18B20 implements SensorInterface
      * Write
      *
      * @param array $args
-     * @return boolean
+     * @return bool
      */
-    public function write($args = array())
+    public function write(array $args = [])
     {
         return false;
     }

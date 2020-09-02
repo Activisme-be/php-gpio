@@ -2,11 +2,16 @@
 
 namespace PhpGpio;
 
+use Exception;
+use InvalidArgumentException;
+
 class Gpio implements GpioInterface
 {
-    // Using BCM pin numbers.
-    private $pins;
-    private $hackablePins;
+    private array $pins;            // BCM pin numbers
+    private array $hackablePins;    // BCM pin numbers
+    private array $directions = [GpioInterface::DIRECTION_IN, GpioInterface::DIRECTION_OUT];
+    private array $outputs = [GpioInterface::IO_VALUE_ON, GpioInterface::IO_VALUE_OFF];
+    private array $exportedPins = []; // exported pins for when we unexport all
 
     /**
      * @link http://www.raspberrypi-spy.co.uk/2012/06/simple-guide-to-the-rpi-gpio-header-and-pins/
@@ -14,68 +19,31 @@ class Gpio implements GpioInterface
     public function __construct()
     {
         $raspi = new Pi;
+
         if ($raspi->getVersion() < 4) {
-            $this->pins = array(
-                0, 1, 4, 7, 8, 9,
-                10, 11, 14, 15, 17, 18,
-                21, 22, 23, 24, 25
-            );
-            $this->hackablePins = array(
-                4, 7, 8, 9,
-                10, 11, 17, 18,
-                21, 22, 23, 24, 25
-            );
-        } else if($raspi->getVersion() < 16) {
+            $this->pins = [0, 1, 4, 7, 8, 9, 10, 11, 14, 15, 17, 18, 21, 22, 23, 24, 25];
+            $this->hackablePins = [4, 7, 8, 9, 10, 11, 17, 18, 21, 22, 23, 24, 25];
+        } elseif($raspi->getVersion() < 16) {
             # new GPIO layout (REV2)
-            $this->pins = array(
-                2, 3, 4, 7, 8, 9,
-                10, 11, 14, 15, 17, 18,
-                22, 23, 24, 25, 27
-            );
-            $this->hackablePins = array(
-                4, 7, 8, 9,
-                10, 11, 17, 18,
-                22, 23, 24, 25, 27
-            );
+            $this->pins = [2, 3, 4, 7, 8, 9, 10, 11, 14, 15, 17, 18, 22, 23, 24, 25, 27];
+            $this->hackablePins = [4, 7, 8, 9, 10, 11, 17, 18, 22, 23, 24, 25, 27];
         } else {
             # new GPIO layout (B+)
-            $this->pins = array(
-                2, 3, 4, 5, 6, 7,
-                8, 9, 10, 11, 12, 13,
-                14, 15, 16, 17, 18, 19,
-                20, 21, 22, 23, 24, 25,
-                26, 27
-            );
-            $this->hackablePins = array(
-                4, 5, 6,
-                12, 13, 16, 17, 18, 19,
-                20, 21, 22, 23, 24, 25, 26, 27
-            );
+            $this->pins = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
+            $this->hackablePins = [4, 5, 6, 12, 13, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27];
         }
     }
 
     /**
      * getHackablePins : the pins you can hack with.
+     *
      * @link http://elinux.org/RPi_Low-level_peripherals
-     * @return integer[]
+     * @return int[]
      */
     public function getHackablePins()
     {
         return $this->hackablePins;
     }
-
-    private $directions = array(
-        GpioInterface::DIRECTION_IN,
-        GpioInterface::DIRECTION_OUT,
-    );
-
-    private $outputs = array(
-        GpioInterface::IO_VALUE_ON,
-        GpioInterface::IO_VALUE_OFF,
-    );
-
-    // exported pins for when we unexport all
-    private $exportedPins = array();
 
     /**
      * Setup pin, takes pin number and direction (in or out)
@@ -112,19 +80,23 @@ class Gpio implements GpioInterface
     /**
      * Get input value
      *
-     * @param  int   $pinNo
+     * @param int $pinNo
      * @return false|string string GPIO value or boolean false
+     *
+     * @throws Exception
      */
     public function input($pinNo)
     {
-        if (!$this->isValidPin($pinNo)) {
+        if (! $this->isValidPin($pinNo)) {
             return false;
         }
+
         if ($this->isExported($pinNo)) {
             if ($this->currentDirection($pinNo) != "out") {
                 return trim(file_get_contents(GpioInterface::PATH_GPIO.$pinNo.'/value'));
             }
-            throw new \Exception('Error!' . $this->currentDirection($pinNo) . ' is a wrong direction for this pin!');
+
+            throw new Exception('Error!' . $this->currentDirection($pinNo) . ' is a wrong direction for this pin!');
         }
 
         return false;
@@ -133,11 +105,13 @@ class Gpio implements GpioInterface
     /**
      * Set output value
      *
-     * @param  int    $pinNo
+     * @param  int $pinNo
      * @param  string $value
      * @return mixed  Gpio current instance or boolean false
+     *
+     * @throws Exception
      */
-    public function output($pinNo, $value)
+    public function output(int $pinNo, string $value)
     {
         if (!$this->isValidPin($pinNo)) {
             return false;
@@ -145,11 +119,12 @@ class Gpio implements GpioInterface
         if (!$this->isValidOutput($value)) {
             return false;
         }
+
         if ($this->isExported($pinNo)) {
             if ($this->currentDirection($pinNo) != "in") {
                 file_put_contents(GpioInterface::PATH_GPIO.$pinNo.'/value', $value);
             } else {
-                throw new \Exception('Error! Wrong Direction for this pin! Meant to be out while it is ' . $this->currentDirection($pinNo));
+                throw new Exception('Error! Wrong Direction for this pin! Meant to be out while it is ' . $this->currentDirection($pinNo));
             }
         }
 
@@ -167,10 +142,14 @@ class Gpio implements GpioInterface
         if (!$this->isValidPin($pinNo)) {
             return false;
         }
+
         if ($this->isExported($pinNo)) {
             file_put_contents(GpioInterface::PATH_UNEXPORT, $pinNo);
+
             foreach ($this->exportedPins as $key => $value) {
-                if($value == $pinNo) unset($key);
+                if ($value == $pinNo) {
+                    unset($key);
+                }
             }
         }
 
@@ -187,7 +166,8 @@ class Gpio implements GpioInterface
         foreach ($this->exportedPins as $pinNo) {
             file_put_contents(GpioInterface::PATH_UNEXPORT, $pinNo);
         }
-        $this->exportedPins = array();
+
+        $this->exportedPins = [];
 
         return $this;
     }
@@ -195,11 +175,12 @@ class Gpio implements GpioInterface
     /**
      * Check if pin is exported
      *
-     * @return boolean
+     * @param  int $pinNo
+     * @return bool
      */
-    public function isExported($pinNo)
+    public function isExported(int $pinNo): bool
     {
-        if (!$this->isValidPin($pinNo)) {
+        if (! $this->isValidPin($pinNo)) {
             return false;
         }
 
@@ -223,16 +204,19 @@ class Gpio implements GpioInterface
     /**
      * Check for valid direction, in or out
      *
+     * @param  mixed $direction
+     * @return bool
+     *
      * @exception InvalidArgumentException
-     * @return boolean true
      */
-    public function isValidDirection($direction)
+    public function isValidDirection($direction): bool
     {
         if (!is_string($direction) || empty($direction)) {
-            throw new \InvalidArgumentException(sprintf('Direction "%s" is invalid (string expected).', $direction));
+            throw new InvalidArgumentException(sprintf('Direction "%s" is invalid (string expected).', $direction));
         }
+
         if (!in_array($direction, $this->directions)) {
-            throw new \InvalidArgumentException(sprintf('Direction "%s" is invalid (unknown direction).', $direction));
+            throw new InvalidArgumentException(sprintf('Direction "%s" is invalid (unknown direction).', $direction));
         }
 
         return true;
@@ -241,16 +225,19 @@ class Gpio implements GpioInterface
     /**
      * Check for valid output value
      *
+     * @param  mixed $output
+     * @return bool true
+     *
      * @exception InvalidArgumentException
-     * @return boolean true
      */
-    public function isValidOutput($output)
+    public function isValidOutput($output): bool
     {
         if (!is_int($output)) {
-            throw new \InvalidArgumentException(sprintf('Pin value "%s" is invalid (integer expected).', $output));
+            throw new InvalidArgumentException(sprintf('Pin value "%s" is invalid (integer expected).', $output));
         }
+
         if (!in_array($output, $this->outputs)) {
-            throw new \InvalidArgumentException(sprintf('Output value "%s" is invalid (out of exepected range).', $output));
+            throw new InvalidArgumentException(sprintf('Output value "%s" is invalid (out of exepected range).', $output));
         }
 
         return true;
@@ -259,16 +246,19 @@ class Gpio implements GpioInterface
     /**
      * Check for valid pin value
      *
+     * @param  mixed $pinNo
+     * @return bool
+     *
      * @exception InvalidArgumentException
-     * @return boolean true
      */
-    public function isValidPin($pinNo)
+    public function isValidPin(int $pinNo): bool
     {
         if (!is_int($pinNo)) {
-            throw new \InvalidArgumentException(sprintf('Pin number "%s" is invalid (integer expected).', $pinNo));
+            throw new InvalidArgumentException(sprintf('Pin number "%s" is invalid (integer expected).', $pinNo));
         }
+
         if (!in_array($pinNo, $this->pins)) {
-            throw new \InvalidArgumentException(sprintf('Pin number "%s" is invalid (out of exepected range).', $pinNo));
+            throw new InvalidArgumentException(sprintf('Pin number "%s" is invalid (out of exepected range).', $pinNo));
         }
 
         return true;
