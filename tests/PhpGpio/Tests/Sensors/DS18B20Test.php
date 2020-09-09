@@ -2,17 +2,19 @@
 
 namespace PhpGpio\Tests\Sensors;
 
+use InvalidArgumentException;
 use PhpGpio\Sensors\DS18B20;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Ronan Guilloux <ronan.guilloux@gmail.com>
  */
-class DS18B20Test extends \PhpUnit_Framework_TestCase
+class DS18B20Test extends TestCase
 {
-    private $sensor;
-    private $rpi = 'raspberrypi';
+    private DS18B20 $sensor;
+    private string $rpi = 'raspberrypi';
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->sensor = new DS18B20();
     }
@@ -28,11 +30,9 @@ class DS18B20Test extends \PhpUnit_Framework_TestCase
         }
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetBusWithWrongNonExisitingFilePath()
     {
+        $this->expectException(InvalidArgumentException::class);
         //$this->assertPreconditionOrMarkTestSkipped();
         $result = $this->sensor->setBus('/foo/bar/.baz');
     }
@@ -45,27 +45,21 @@ class DS18B20Test extends \PhpUnit_Framework_TestCase
         $result = $this->sensor->setBus(null);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetBusWithWrongExistingFile()
     {
+        $this->expectException(InvalidArgumentException::class);
         $result = $this->sensor->setBus('/etc/hosts');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetBusWithWrongStringParameter()
     {
+        $this->expectException(InvalidArgumentException::class);
         $result = $this->sensor->setBus('foo');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetBusWithWrongIntParameter()
     {
+        $this->expectException(InvalidArgumentException::class);
         $result = $this->sensor->setBus(1);
     }
 

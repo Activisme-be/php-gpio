@@ -3,17 +3,18 @@
 namespace PhpGpio\Tests;
 
 use PhpGpio\Gpio;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Ronan Guilloux <ronan.guilloux@gmail.com>
  */
-class GpioTest extends \PhpUnit_Framework_TestCase
+class GpioTest extends TestCase
 {
     private $gpio;
     private $rpi ='raspberrypi';
     private $hackablePins = array();
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->gpio = new Gpio();
 
@@ -90,37 +91,29 @@ class GpioTest extends \PhpUnit_Framework_TestCase
         $this->gpio->setup(null, 'out');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetupWithWrongPinAndRightDirection()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->gpio->setup('wrongPin', 'out');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetupWithRightPinAndWrongDirection()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->assertPreconditionOrMarkTestSkipped();
         $this->gpio->setup(17, 'wrongDirection');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetupWithRightPinAndNullDirection()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->assertPreconditionOrMarkTestSkipped();
         $this->gpio->setup(17, null);
     }
 
-    /**
-     * @expectedException PHPUnit_Framework_Error_Warning
-     */
     public function testSetupWithMissingArguments()
     {
+        $this->expectException(PHPUnit_Framework_Error_Warning::class);
         $this->gpio->setup(17);
     }
 

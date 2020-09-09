@@ -3,17 +3,18 @@
 namespace PhpGpio\Tests;
 
 use PhpGpio\Pi;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @author Ronan Guilloux <ronan.guilloux@gmail.com>, Bas Bloemsaat <bas@bloemsaat.com>
  */
-class PiTest extends \PhpUnit_Framework_TestCase
+class PiTest extends TestCase
 {
     private $gpio;
     private $rpi ='raspberrypi';
     private $pi;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->pi = new Pi();
     }
