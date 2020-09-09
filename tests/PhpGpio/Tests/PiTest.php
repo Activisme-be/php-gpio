@@ -35,7 +35,7 @@ class PiTest extends TestCase
         $this->assertPreconditionOrMarkTestSkipped();
         $this->assertTrue($this->pi instanceof Pi);
         $version = $this->pi->getVersion();
-        $this->assertInternalType('integer' , $version);
+        $this->assertIsInt($version);
 
     }
 
@@ -54,7 +54,7 @@ class PiTest extends TestCase
         $this->assertPreconditionOrMarkTestSkipped();
         $this->assertTrue($this->pi instanceof Pi);
         $result = $this->pi->getCpuTemp();
-        $this->assertInternalType('float' , $result);
+        $this->assertIsFloat($result);
 
     }
 
@@ -63,7 +63,7 @@ class PiTest extends TestCase
         $this->assertPreconditionOrMarkTestSkipped();
         $this->assertTrue($this->pi instanceof Pi);
         $result = $this->pi->getGpuTemp();
-        $this->assertInternalType('float' , $result);
+        $this->assertIsFloat($result);
 
     }
 
@@ -72,7 +72,7 @@ class PiTest extends TestCase
         $this->assertPreconditionOrMarkTestSkipped();
         $this->assertTrue($this->pi instanceof Pi);
         $result = $this->pi->getCpuFrequency();
-        $this->assertInternalType('float' , $result);
+        $this->assertIsFloat($result);
 
     }
 

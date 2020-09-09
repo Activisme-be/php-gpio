@@ -2,6 +2,7 @@
 
 namespace PhpGpio\Tests;
 
+use InvalidArgumentException;
 use PhpGpio\Gpio;
 use PHPUnit\Framework\TestCase;
 
@@ -10,9 +11,9 @@ use PHPUnit\Framework\TestCase;
  */
 class GpioTest extends TestCase
 {
-    private $gpio;
-    private $rpi ='raspberrypi';
-    private $hackablePins = array();
+    private Gpio $gpio;
+    private string $rpi ='raspberrypi';
+    private array $hackablePins = [];
 
     public function setUp(): void
     {
@@ -75,19 +76,15 @@ class GpioTest extends TestCase
         }
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetupWithNegativePinAndRightDirection()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->gpio->setup(-1, 'out');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSetupWithNullPinAndRightDirection()
     {
+        $this->expectException(InvalidArgumentException::class);
         $this->gpio->setup(null, 'out');
     }
 
