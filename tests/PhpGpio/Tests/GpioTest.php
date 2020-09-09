@@ -5,6 +5,7 @@ namespace PhpGpio\Tests;
 use InvalidArgumentException;
 use PhpGpio\Gpio;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Warning;
 
 /**
  * @author Ronan Guilloux <ronan.guilloux@gmail.com>
@@ -110,7 +111,7 @@ class GpioTest extends TestCase
 
     public function testSetupWithMissingArguments()
     {
-        $this->expectException(PHPUnit_Framework_Error_Warning::class);
+        $this->expectException(Warning::class);
         $this->gpio->setup(17);
     }
 
