@@ -92,7 +92,7 @@ class Gpio implements GpioInterface
         }
 
         if ($this->isExported($pinNo)) {
-            if ($this->currentDirection($pinNo) != "out") {
+            if ($this->currentDirection($pinNo) !== "out") {
                 return trim(file_get_contents(GpioInterface::PATH_GPIO.$pinNo.'/value'));
             }
 
@@ -121,7 +121,7 @@ class Gpio implements GpioInterface
         }
 
         if ($this->isExported($pinNo)) {
-            if ($this->currentDirection($pinNo) != "in") {
+            if ($this->currentDirection($pinNo) !== "in") {
                 file_put_contents(GpioInterface::PATH_GPIO.$pinNo.'/value', $value);
             } else {
                 throw new Exception('Error! Wrong Direction for this pin! Meant to be out while it is ' . $this->currentDirection($pinNo));
@@ -147,7 +147,7 @@ class Gpio implements GpioInterface
             file_put_contents(GpioInterface::PATH_UNEXPORT, $pinNo);
 
             foreach ($this->exportedPins as $key => $value) {
-                if ($value == $pinNo) {
+                if ($value === $pinNo) {
                     unset($key);
                 }
             }

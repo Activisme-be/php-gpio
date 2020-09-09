@@ -115,7 +115,7 @@ class GpioDevelop implements GpioInterface
      */
     public function isValidDirection($direction): bool
     {
-        return $direction == GpioInterface::DIRECTION_IN || $direction == GpioInterface::DIRECTION_OUT;
+        return $direction === GpioInterface::DIRECTION_IN || $direction === GpioInterface::DIRECTION_OUT;
     }
 
     /**
@@ -126,7 +126,7 @@ class GpioDevelop implements GpioInterface
      */
     public function isValidOutput($output): bool
     {
-        return $output == GpioInterface::IO_VALUE_ON || $output == GpioInterface::IO_VALUE_OFF;
+        return $output === GpioInterface::IO_VALUE_ON || $output === GpioInterface::IO_VALUE_OFF;
     }
 
     /**
